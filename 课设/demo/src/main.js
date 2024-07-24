@@ -15,7 +15,7 @@ let mygo='back-end'
 let Ws = ref(null); 
 
 console.log("开启socket链接-----"+'ws://')//'ws://' + mygo +':18080' + '/ws'
-Ws.value = new WebSocket('ws://10.200.7.84:60080/ws');  
+Ws.value = new WebSocket('ws://8.138.45.45:80/ws');  
 // messageWs.value.onopen = (event) => {  
 //   // 当 WebSocket 连接打开时，发送认证消息  
 //   authenticate(messageWs);  

@@ -4,6 +4,7 @@ import (
 	"design/api"
 	"design/api/ws"
 	"design/utils/jwt"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
@@ -58,6 +59,7 @@ func main() {
 func jwtMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 检查请求是否是WebSocket升级请求
+		fmt.Println(c.Request.URL.Path)
 		if c.Request.Header.Get("Connection") == "Upgrade" &&
 			c.Request.Header.Get("Upgrade") == "websocket" &&
 			websocket.IsWebSocketUpgrade(c.Request) {

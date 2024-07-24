@@ -1,7 +1,7 @@
 
 # MySQL数据源配置
 DatabaseSettings:
-  DatabaseURIL: "tcp(ruoyi-mysql:3306)"
+  DatabaseURIL: "tcp(8.138.45.45:3306)"
   DatabaseURIR: "parseTime=True&loc=Local"
   DatabaseName: "chat_db" # 数据库名
   Username: "root"
@@ -10,7 +10,7 @@ DatabaseSettings:
 JwtSettings:
   SecretKey: "chat.com" #JWTkey
 
-RedisName: "ruoyi-redis"
+RedisName: "8.138.45.45"
 
-ServerName: "back-end"
+ServerName: "8.138.45.45"
 
