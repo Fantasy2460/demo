@@ -14,6 +14,7 @@ const router = useRouter()
 onMounted(()=>{
   service.get($MYGO+'/user/createYz')
   .then(res=>{
+    console.log("--------")
     localStorage.setItem('yz',res.data.yz)
   })
 })

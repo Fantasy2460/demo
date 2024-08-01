@@ -10,7 +10,7 @@ import { MYGO } from './symbol'
 import {ElNotification} from 'element-plus'  
 import { useWsStore } from './store/user';
 
-let mygo='back-end'
+let mygo='http://8.138.45.45/back-end'
 
 let Ws = ref(null); 
 

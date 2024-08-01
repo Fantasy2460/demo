@@ -9,7 +9,7 @@
           :before-upload="beforeImageUpload"
         >
         <img v-if="user.img" :src="user.img" style="height:100px;width:100px;border-radius:50%"  />
-          <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+          <el-icon v-else class="avatar-uploader-icon" style="height:70px;width:70px;border-radius:50%;background-color:white"><Plus />头像</el-icon>
         </el-upload>
       </div>
       <li style="margin-top:20px">账号：<input style="margin-left:50px;background-color:rgb(105, 105, 105);border:0px" type="text" v-model="user.username"/></li>

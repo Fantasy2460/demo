@@ -135,7 +135,7 @@
   </div>
   <el-drawer v-model="drawer1" direction="rtl" v-if="index!=-1">
     <template #header>
-      <h4><img :src="usertoUsers[index].ToUser.img"/> {{ usertoUsers[index].remarks }} </h4>
+      <h4><img :src="usertoUsers[index].ToUser.img" style="width: 50px;border-radius:10px"/> {{ usertoUsers[index].remarks }} </h4>
     </template>
     <template #default>
       <div>账号：{{ usertoUsers[index].ToUser.username }}</div>
@@ -154,7 +154,7 @@
   </el-drawer>
   <el-drawer v-model="drawer2" direction="ltr">
     <template #header>
-      <h4><img :src="user.img"/>  </h4>
+      <h4><img :src="user.img" style="width: 50px;border-radius:10px"/>  </h4>
     </template>
     <template #default>
       <div>账号：{{ user.username }}</div>
