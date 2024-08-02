@@ -127,7 +127,7 @@
           </li>
           </div> -->
           <div style="height:10px;width:1px"></div>
-          <textarea style="width:590px;height:120px;background-color:rgb(141, 141, 141);border:1px double black;margin-left:10px" v-model="message"></textarea>
+          <textarea style="width:590px;height:120px;background-color:rgb(141, 141, 141);border:1px double black;margin-left:10px" v-model="message" @input="handleInput"></textarea>
           <button style="color:rgba(220, 228, 253, 0.942);background-color:#82838372;width:60px;height:30px;margin-left:500px" @click="send">发送</button>
         </div>
       </div>
@@ -135,7 +135,7 @@
   </div>
   <el-drawer v-model="drawer1" direction="rtl" v-if="index!=-1">
     <template #header>
-      <h4><img :src="usertoUsers[index].ToUser.img" style="width: 50px;border-radius:10px"/> {{ usertoUsers[index].remarks }} </h4>
+      <h4><img :src="usertoUsers[index].ToUser.img" style="width: 50px;border-radius:25px"/> {{ usertoUsers[index].remarks }} </h4>
     </template>
     <template #default>
       <div>账号：{{ usertoUsers[index].ToUser.username }}</div>
@@ -154,7 +154,7 @@
   </el-drawer>
   <el-drawer v-model="drawer2" direction="ltr">
     <template #header>
-      <h4><img :src="user.img" style="width: 50px;border-radius:10px"/>  </h4>
+      <h4><img :src="user.img" style="width: 50px;border-radius:25px"/>  </h4>
     </template>
     <template #default>
       <div>账号：{{ user.username }}</div>
@@ -238,7 +238,13 @@ const emojis = [
 ];
 
 // emojis = emojis.map(emoji => ({text: emoji}))
-
+function handleInput() {  
+    // 检查inputValue是否包含换行符  
+    if (message.value.includes('\n')) {  
+      // 如果包含换行符，则执行你的函数  
+      send();  
+    }  
+}
 function confirmClick(){
 
   service.post($MYGO+'/usertoUser/update',{
@@ -246,9 +252,15 @@ function confirmClick(){
     'remarks':remarks.value,
   }).then(res=>{
     usertoUsers[index.value].remarks=remarks.value
+    ElNotification({
+        title: 'success',
+        message: "保存成功",
+        type: 'success',
+      })
   }).catch(err=>{
     console.error(err)
   })
+
 }
 const uploadUrl=ref($MYGO+'/userImg/create')
 const imageUrl = ref('')

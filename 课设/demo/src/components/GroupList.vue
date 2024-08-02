@@ -101,7 +101,7 @@
         <div style="width:1px; background-color: black;"></div>
         <div class="Chat">
           <div style="height:10px;width:1px"></div>
-          <textarea style="width:590px;height:120px;background-color:rgb(141, 141, 141);border:1px double black;margin-left:10px" v-model="message"></textarea>
+          <textarea style="width:590px;height:120px;background-color:rgb(141, 141, 141);border:1px double black;margin-left:10px" v-model="message" @input="handleInput"></textarea>
           <button style="color:rgba(220, 228, 253, 0.942);background-color:#82838372;width:60px;height:30px;margin-left:500px" @click="send">发送</button>
         </div>
       </div>
@@ -146,7 +146,7 @@
     </el-drawer>
     <el-drawer v-model="drawer2" direction="ltr" v-if="nwgroupuser.userId==user.userId">
       <template #header>
-        <h4><img :src="nwgroupuser.user.img" style="width: 100px;"/> {{ nwgroupuser.text }} </h4>
+        <h4><img :src="nwgroupuser.user.img" style="width: 50px;border-radius:25px"/> {{ nwgroupuser.text }} </h4>
       </template>
       <template #default>
         <div>账号：{{ nwgroupuser.user.username }}</div>
@@ -169,7 +169,7 @@
     </el-drawer>
     <el-drawer v-model="drawer2" direction="ltr" v-if="nwgroupuser.userId!=user.userId">
       <template #header>
-        <h4><img :src="nwgroupuser.user.img" style="width: 100px;"/> {{ nwgroupuser.text }} </h4>
+        <h4><img :src="nwgroupuser.user.img" style="width: 50px;border-radius:25px"/> {{ nwgroupuser.text }} </h4>
       </template>
       <template #default>
         <div>账号：{{ nwgroupuser.user.username }}</div>
@@ -210,6 +210,13 @@ var user = reactive(JSON.parse(localStorage.getItem('user')))
 const $Ws: ((data) => string) | undefined = inject('$Ws')
 
 let message=ref('')
+function handleInput() {  
+    // 检查inputValue是否包含换行符  
+    if (message.value.includes('\n')) {  
+      // 如果包含换行符，则执行你的函数  
+      send();  
+    }  
+}
 let nwgroupuser=reactive({
   user:{},
   groupId: 4,
