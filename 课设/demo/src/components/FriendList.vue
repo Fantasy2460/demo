@@ -23,12 +23,16 @@
         </div>
         <el-scrollbar style="height:550px;width:200px">
           <p v-for="(item,index) in usertoUsers" 
-          :key="index" style="margin-top:-0px;line-height:60px;width:200px;height:60px;background-color:rgb(189, 184, 184);color:black;border-radius:10px" class="friend">
+          :key="index" style="margin-top:-0px;line-height:60px;width:200px;height:60px;background-color:rgb(189, 184, 184);color:black;border-radius:10px;display: flex;" class="friend">
               <div class="unread-indicator" style="margin-top:0px">  
                 <div class="unread-count" v-if="item.count"> {{ item.count }}</div>  
               </div>
-            <img :src="item.ToUser.img" style="margin-top:7px; margin-left:10px;width:50px;height:50px;border-radius:50% ;border:rgb(104, 103, 103)" @click="goindex(index)"/>
-            {{ item.remarks }}
+            <img :src="toImg(item.user.img)" style="margin-top:7px; margin-left:10px;width:50px;height:50px;border-radius:50% ;border:rgb(104, 103, 103)" @click="goindex(index)"/>
+            <div style="margin-left: 10px;">
+              <div style="height: 40%;">{{ item.remark }}</div>
+              <div style="font-size: 5px;">{{ item.message }}</div>
+            </div>
+            
             <div style="box-shadow:-2px 2px 2px rgba(0, 0, 0, 0.15);height:2px;width:200px"></div>
           </p>
         </el-scrollbar>
@@ -36,9 +40,9 @@
       <div style="border:1px;height:600px;width:1px;float:left"></div>
       <div>
         <div class="Message" >
-          <div>
-            <div v-if="index!=-1" style="margin-left:20px;line-height:20px">{{ usertoUsers[index].remarks }}</div>
-            <button v-if="index!=-1" style="float:right;margin-right:20px;margin-top:-10px;background-color:rgb(105, 105, 105);border:0px;" @click="drawer1 = true,remarks=usertoUsers[index].remarks">···</button>
+          <div v-if="index!=-1">
+            <div  style="margin-left:20px;line-height:20px">{{ usertoUsers[index].remark }}</div>
+            <button style="float:right;margin-right:20px;margin-top:-10px;background-color:rgb(105, 105, 105);border:0px;" @click="drawer1 = true,remarks=usertoUsers[index].remark">···</button>
           </div>
           
           <hr>
@@ -47,9 +51,9 @@
               <div ref="innerRef">
                 <p v-for="(message,i) in usertoUsers[index].userMessages" 
                 :key="i" 
-                 :class="getMessageClass(message.userOwner==usertoUsers[index].userOwner,message.isDeleted)">
-                 <div v-if="message.isDeleted" style="display: flex;">
-                  {{ message.userOwner==usertoUsers[index].userOwner?'您已撤回一条消息':'对方已撤回一条消息' }}
+                 :class="getMessageClass(message.messageKey==message.id,message.isWithdrawn)">
+                 <div v-if="message.isWithdrawn" style="display: flex;">
+                  {{ message.messageKey==message.id?'您已撤回一条消息':'对方已撤回一条消息' }}
                   <div v-if="message.standby" class="mb-4">
                     <el-button
                       type="danger"
@@ -61,11 +65,11 @@
                      重新编辑
                     </el-button>
                   </div>
-                  <div @click="messagedelete(index,message.key,i)">
-                    <img :src="$MYGO + '/static/images/close.png'"/>
+                  <div @click="messagedelete(index,i)">
+                    <img :src="toImg('/static/images/close.png')"/>
                   </div>
                  </div>
-                 <div v-else-if="message.userOwner==usertoUsers[index].userOwner" style="display: flex;">
+                 <div v-else-if="message.messageKey==message.id" style="display: flex;">
                       <div style="width:300px;height:1px"></div>
                     <div class="bubble">
                         <div class="message">
@@ -73,10 +77,10 @@
                             <div style="text-align: right; margin: 0;">
                               <div style="display:flex">
                               <el-button size="small" type="primary" style="background-color:rgb(207, 230, 244)" text @click="message.visible = false">取消</el-button>
-                              <el-button size="small" type="primary" @click="revocation(index,message.key,i)">
+                              <el-button size="small" type="primary" @click="revocation(index,i)">
                                 撤回
                               </el-button>
-                              <el-button size="small" type="primary" @click="messagedelete(index,message.key,i)">
+                              <el-button size="small" type="primary" @click="messagedelete(index,i)">
                                 删除
                               </el-button>
                               </div>
@@ -89,19 +93,19 @@
                         </div>
                     </div>
                     <div class="avatar">
-                      <img :src="user.img" class="avatar-image" style="margin-right:20px" @click="drawer2 = true"/>
+                      <img :src="toImg(user.img)" class="avatar-image" style="margin-right:20px" @click="drawer2 = true"/>
                     </div>
                   </div>
                   <div v-else  style="display: flex;">
                     <div class="avatar">
-                      <img :src="usertoUsers[index].ToUser.img" class="avatar-image" style="margin-left:20px" @click="drawer1 = true,remarks=usertoUsers[index].remarks"/>
+                      <img :src="toImg(usertoUsers[index].user.img)" class="avatar-image" style="margin-left:20px" @click="drawer1 = true,remarks=usertoUsers[index].remark"/>
                     </div>
                     <div class="bubble">
                       <div class="message">
                         <el-popover :visible="message.visible?message.visible:false" placement="top" :width="160">
                           <div style="text-align: right; margin: 0;">
                             <el-button size="small" type="primary" style="background-color:rgb(207, 230, 244)" text @click="message.visible = false">取消</el-button>
-                            <el-button size="small" type="primary" @click="messagedelete(index,message.key,i)">
+                            <el-button size="small" type="primary" @click="messagedelete(index,i)">
                               删除
                             </el-button>
                           </div>
@@ -135,15 +139,15 @@
   </div>
   <el-drawer v-model="drawer1" direction="rtl" v-if="index!=-1">
     <template #header>
-      <h4><img :src="usertoUsers[index].ToUser.img" style="width: 50px;border-radius:25px"/> {{ usertoUsers[index].remarks }} </h4>
+      <h4><img :src="toImg(usertoUsers[index].user.img)" style="width: 50px;border-radius:25px"/> {{ usertoUsers[index].remark }} </h4>
     </template>
     <template #default>
-      <div>账号：{{ usertoUsers[index].ToUser.username }}</div>
-      <div>账号名：{{ usertoUsers[index].ToUser.account }}</div>
+      <div>账号：{{ usertoUsers[index].user.username }}</div>
+      <div>账号名：{{ usertoUsers[index].user.account }}</div>
       备注：<input v-model="remarks">
 
       <div>其他：</div>
-      <el-button @click="toSpace(usertoUsers[index].ToUser.userId )" type="primary" style="background-color:rgb(207, 230, 244);margin-top:20px;margin-left:10px" text >访问空间</el-button>
+      <el-button @click="toSpace(usertoUsers[index].user.id )" type="primary" style="background-color:rgb(207, 230, 244);margin-top:20px;margin-left:10px" text >访问空间</el-button>
     </template>
     <template #footer>
       <div style="flex: auto">
@@ -154,7 +158,7 @@
   </el-drawer>
   <el-drawer v-model="drawer2" direction="ltr">
     <template #header>
-      <h4><img :src="user.img" style="width: 50px;border-radius:25px"/>  </h4>
+      <h4><img :src="toImg(user.img)" style="width: 50px;border-radius:25px"/>  </h4>
     </template>
     <template #default>
       <div>账号：{{ user.username }}</div>
@@ -191,8 +195,8 @@
           <p v-for="(item,index) in usertoUsers" 
           :key="index" style="margin-top:10px;line-height:60px;width:200px;height:60px;color:black;border-radius:12px" class="friend">
             <el-checkbox v-model="item.checked"></el-checkbox>
-            <img :src="item.ToUser.img" style="margin-right:20px; margin-left:10px;width:50px;height:50px;border-radius:50% ;border:rgb(104, 103, 103)" @click="goindex(index)"/>
-            {{ item.remarks }}
+            <img :src="toImg(item.user.img)" style="margin-right:20px; margin-left:10px;width:50px;height:50px;border-radius:50% ;border:rgb(104, 103, 103)" @click="goindex(index)"/>
+            {{ item.remark }}
           </p>
         </el-scrollbar>
       </div>
@@ -245,13 +249,16 @@ function handleInput() {
       send();  
     }  
 }
+function toImg(url){
+  return $MYGO+"/"+url
+}
 function confirmClick(){
 
   service.post($MYGO+'/usertoUser/update',{
-    'userTarget':usertoUsers[index.value].userTarget-0,
-    'remarks':remarks.value,
+    'id':usertoUsers[index.value].id,
+    'remark':remarks.value,
   }).then(res=>{
-    usertoUsers[index.value].remarks=remarks.value
+    usertoUsers[index.value].remark=remarks.value
     ElNotification({
         title: 'success',
         message: "保存成功",
@@ -264,6 +271,7 @@ function confirmClick(){
 }
 const uploadUrl=ref($MYGO+'/userImg/create')
 const imageUrl = ref('')
+//上传图片还未完成
 function httpRequest(option){
   let dataForm = new FormData();
   dataForm.append('file',option.file)
@@ -303,35 +311,54 @@ function creategroup(){
   let groupUsers=[]
   for(let i=0;i<usertoUsers.length;i++){
     if(usertoUsers[i].checked){
-      groupUsers.push({'userId':usertoUsers[i].ToUser.userId})
+      groupUsers.push(usertoUsers[i].user.id)
       usertoUsers[i].checked=false
     }
   }
-  $Ws && $Ws({
-    groupId: groupId.value,
-    groupName:groupName.value,
-    groupUsers:groupUsers,
-    img:imageUrl.value,
-    event:'/group/createGroup',
-    token:localStorage.getItem('token')
-    })
-    drawer3.value=false
+  service.post($MYGO+'/group/createGroup',{
+    'userIds': groupUsers,
+    'groupNumber': groupId.value,
+    'groupName':groupName.value,
+    'groupAvatar':imageUrl.value
+  }).then(res=>{
+    ElNotification({
+        title: 'success',
+        message: "成功",
+        type: 'success',
+      })
+  }).catch(err=>{
+    console.error(err)
+    ElNotification({
+        title: 'Error',
+        message: err.response.data.errorMessage,
+        type: 'error',
+      })
+  })
+  drawer3.value=false
 }
 function send(){
-  $Ws && $Ws({
-            userTarget: usertoUsers[index.value].userTarget-0,
-            message:message.value,
-            event:'/usertoUser/send',
-            token:localStorage.getItem('token')
-        })
+  if(index.value==-1){
+    alert('错误请求')
+    return
+  }
+  service.post($MYGO+'/usertoUser/send',{
+    'id': usertoUsers[index.value].id,
+    'message': message.value,
+    'image':''
+  }).then(res=>{
+  }).catch(err=>{
+    console.error(err)
+    ElNotification({
+        title: 'Error',
+        message: err.response.data.errorMessage,
+        type: 'error',
+      })
+  })
   message.value=''
 }
-function messagedelete(i,key,j){
-  usertoUsers[i].userMessages[j].visible=false
-  let userMessages=[{key:key-0}]
+function messagedelete(i,j){
   service.post($MYGO+'/usertoUser/deleteMessage',{
-    'userTarget': usertoUsers[i].userTarget-0,
-    'userMessages':userMessages,
+    'id': usertoUsers[i].userMessages[j].id
   }).then(res=>{
     usertoUsers[i].userMessages.splice(j,1)
   }).catch(err=>{
@@ -343,15 +370,19 @@ function messagedelete(i,key,j){
       })
   })
 }
-function revocation(i,key,j){
-  usertoUsers[i].userMessages[j].visible=false
-  let userMessages=[{key:key-0}]
-  $Ws && $Ws({
-            userTarget: usertoUsers[i].userTarget-0,
-            userMessages:userMessages,
-            event:'/usertoUser/revocation',
-            token:localStorage.getItem('token')
-        })
+function revocation(i,j){
+  service.post($MYGO+'/usertoUser/revocation',{
+    'id': usertoUsers[i].userMessages[j].id
+  }).then(res=>{
+    usertoUsers[i].userMessages.splice(j,1)
+  }).catch(err=>{
+    console.error(err)
+    ElNotification({
+        title: 'Error',
+        message: err.response.data.errorMessage,
+        type: 'error',
+      })
+  })
   
 }
 var user = reactive(JSON.parse(localStorage.getItem('user')))
@@ -529,18 +560,26 @@ function readmessage(val){
   
 }
 function goindex(val){
-  let nwval=index.value
-  if(nwval!=-1&&usertoUsers[nwval].userMessages&&!usertoUsers[nwval].userMessages[usertoUsers[nwval].userMessages.length-1].isRead){
-    readmessage(usertoUsers[nwval].userTarget)
-    usertoUsers[nwval].userMessages[usertoUsers[nwval].userMessages.length-1].isRead=true
-    getcount(nwval)
+  if(!usertoUsers[val].reading){
+    service.get($MYGO+'/usertoUser/fid/'+usertoUsers[val].id+'/1/50')
+    .then(res=>{
+      usertoUsers[val].reading=!usertoUsers[val].reading
+      usertoUsers[val].userMessages=res.data.data.items
+      usertoUsers[val].count=0
+    })
+    .catch(err=>{
+      ElNotification({
+        title: 'Error',
+        message: err.response.data,
+        type: 'error',
+      })
+    })
+    
   }
+  service.post($MYGO+'/usertoUser/read',{
+    'id':usertoUsers[val].id
+  })
   index.value=val
-  if(val!=-1&&usertoUsers[val].userMessages&&!usertoUsers[val].userMessages[usertoUsers[val].userMessages.length-1].isRead){
-    readmessage(usertoUsers[val].userTarget)
-    usertoUsers[val].userMessages[usertoUsers[val].userMessages.length-1].isRead=true
-    getcount(val)
-  }
   gobottom()
 }
 function gobottom(){//抵达最底部
@@ -555,14 +594,11 @@ function gobottom(){//抵达最底部
 }
 function getusers(){
   console.log('发送请求')
-   service.get($MYGO+'/usertoUser/fids')
+   service.get($MYGO+'/usertoUser/fids/1/50')
    .then(res=>{
     console.log(res.data)
-    let i=0
-    res.data.forEach(element => {
+    res.data.data.items.forEach(element => {
       usertoUsers.push(element)
-      getcount(i)
-      i++
     });
     gobottom()
    }).catch(err=>{

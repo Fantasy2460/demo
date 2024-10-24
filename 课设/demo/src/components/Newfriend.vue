@@ -7,22 +7,19 @@
         <div v-for="(tmp,index) in friendlist" :key="index">
           <div style="width:750px;height:auto;min-height:70px;background-color:rgb(189, 184, 184);margin-left:30px;margin-top:10px;border-radius:10px">
             <div style="height:50px;display:flex">
-              <img :src="tmp.userResponse.img?tmp.userResponse.img:tmp.groupResponse.img" style="margin-left:10px;height:50px;width:50px;border-radius:50%;border:1px double"/>
+              <img :src="toImg(tmp.img)" style="margin-left:10px;height:50px;width:50px;border-radius:50%;border:1px double"/>
               <div style="font-size:18px;margin-left:10px">
-                {{ tmp.userResponse?tmp.userResponse.account:tmp.groupResponse.groupName }}
+                {{ tmp.username }}
               </div>
               <div style="font-size:18px;margin-left:10px">
-                <span v-if="tmp.class==0">{{ tmp.userOwner==id?'请求添加对方为好友':tmp.remarks }}</span>
-                <span v-if="tmp.class==1">{{ tmp.userOwner==id?'请求加入群聊':'申请加入'+tmp.groupResponse.groupName }}</span>
-                <span v-if="tmp.class==2">{{ tmp.target==id?tmp.userResponse.account+'邀请你加入':'邀请 '+tmp.target+' 加入' }}</span>
+                <span>{{ tmp.senderUserId==id?'请求添加对方为好友':tmp.message }}</span>
               </div>
             </div>
             <div style="display:flex">
               <div style="margin-left:160px;margin-top:-40px;font-size:15px"></div>
-              <div v-if="tmp.stats==0" style="background-color:rgb(223, 219, 219);border:1px double;text-align:center;line-height:30px;margin-top:-30px;width:100px;height:30px;margin-left:300px">
-
-                <div v-if="new Date(tmp.failureTime)>Date.now()">
-                  <div v-if="(tmp.class==1&&tmp.userOwner!=id)||(tmp.class!=1&&tmp.target==id)" style="width:300px">
+              <div v-if="tmp.status==0" style="background-color:rgb(223, 219, 219);border:1px double;text-align:center;line-height:30px;margin-top:-30px;width:100px;height:30px;margin-left:300px">
+                <div v-if="checkTime(tmp.createTime)">
+                  <div v-if="(tmp.receiverUserId==id)" style="width:300px">
                     <div style="display:flex">
                       <button @click="checkN(index)"  style="height:30px;width:80px">不同意</button>
                       <button @click="checkY(index)" style="height:30px;width:80px;">同意</button>
@@ -36,8 +33,8 @@
                    申请已过期
                 </div>
               </div>
-              <div v-if="tmp.stats==1" style="text-align:center;line-height:30px;margin-top:-30px;width:100px;height:30px;margin-left:300px">已拒绝</div>
-              <div v-if="tmp.stats==2" style="text-align:center;line-height:30px;margin-top:-30px;width:100px;height:30px;margin-left:300px">已同意</div>
+              <div v-if="tmp.status==2" style="text-align:center;line-height:30px;margin-top:-30px;width:100px;height:30px;margin-left:300px">已拒绝</div>
+              <div v-if="tmp.status==1" style="text-align:center;line-height:30px;margin-top:-30px;width:100px;height:30px;margin-left:300px">已同意</div>
               <!-- <div :v-if="tmp.is_agr==1" style="margin-top:-30px;width:100px;height:30px;margin-left:300px">已通过</div> -->
             </div>
             <div style="margin-left:100px;font-size:15px">留言：{{tmp.text}}</div>
@@ -49,15 +46,18 @@
 </template>
 <script setup>
 import { ref, onMounted ,h,reactive,nextTick, isRef,inject } from 'vue'; 
-import { ElNotification,ElScrollbar,ElMessageBox } from 'element-plus'
+import { ElMessage,ElNotification,ElScrollbar,ElMessageBox } from 'element-plus'
 import service from '../axios-instance'
 const $MYGO = inject('$MYGO', '');
 let friendlist=reactive([])
-let id = ref(JSON.parse(localStorage.getItem("user")).userId);
+let id = ref(JSON.parse(localStorage.getItem("user")).id);
+function toImg(url){
+  return $MYGO+"/"+url
+}
 function getlist(){
-  service.get($MYGO+'/userApplication/fids')
+  service.get($MYGO+'/userApplication/fids/1/50')
   .then(res=>{
-    res.data.forEach(element => {
+    res.data.data.items.forEach(element => {
       friendlist.push(element)
     });
     console.log(friendlist)
@@ -74,14 +74,18 @@ function checkY(index){
     inputErrorMessage: 'Invalid Email',
   })
     .then(({ value }) => {
-      let u=JSON.stringify(friendlist[index])
-      let body=JSON.parse(u)
-      body.stats=2
+      let body={}
+      body.status=1
       body.remarks=value
+      body.id=friendlist[index].id
       console.log(body)
-      service.post($MYGO+'/userApplication',body)
+      service.post($MYGO+'/userApplication/update',body)
       .then(res=>{
-        friendlist[index].stats=2
+        friendlist[index].status=1
+        ElMessage({
+          type: 'success',
+          message: '成功'
+        })
       }).catch(err=>{
         console.log(err)
         ElNotification({
@@ -100,7 +104,30 @@ function checkY(index){
   
 }
 function checkN(index){
-  console.log('N:'+index)
+  service.post($MYGO+'/userApplication/update',{
+      'status':2,
+      'id':friendlist[index].id
+  })
+  .then(res=>{
+    friendlist[index].status=2
+    ElMessage({
+      type: 'success',
+      message: '成功'
+    })
+  }).catch(err=>{
+    console.log(err)
+    ElNotification({
+      title: 'Error',
+      message: '操作失误',
+      type: 'error',
+    })
+  })
+}
+function checkTime(createTime){
+  console.log(createTime)
+  const time = new Date(createTime);
+  const twentyFourHoursLater = new Date(time.getTime() + 3*24 * 60 * 60 * 1000); // 加上24小时
+  return twentyFourHoursLater > new Date();
 }
 onMounted(()=>{
   getlist()

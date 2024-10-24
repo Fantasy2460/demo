@@ -29,7 +29,6 @@ func Ws(g *gin.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer deleteWs(ws)
 	for {
 		var userid uint

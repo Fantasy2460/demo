@@ -10,12 +10,12 @@ import { MYGO } from './symbol'
 import {ElNotification} from 'element-plus'  
 import { useWsStore } from './store/user';
 
-let mygo='http://8.138.45.45/back-end'
+let mygo='http://localhost:8888/front'
 
 let Ws = ref(null); 
 
 console.log("开启socket链接-----"+'ws://')//'ws://' + mygo +':18080' + '/ws'
-Ws.value = new WebSocket('ws://8.138.45.45:8080/ws');  
+Ws.value = new WebSocket('ws://8.138.45.45:8888/ws');  
 // messageWs.value.onopen = (event) => {  
 //   // 当 WebSocket 连接打开时，发送认证消息  
 //   authenticate(messageWs);  

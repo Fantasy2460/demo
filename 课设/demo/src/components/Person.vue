@@ -8,12 +8,12 @@
           :http-request="httpRequest"
           :before-upload="beforeImageUpload"
         >
-        <img v-if="user.img" :src="user.img" style="height:100px;width:100px;border-radius:50%"  />
+        <img v-if="user.img" :src="toImg(user.img)" style="height:100px;width:100px;border-radius:50%"  />
           <el-icon v-else class="avatar-uploader-icon" style="height:70px;width:70px;border-radius:50%;background-color:white"><Plus />头像</el-icon>
         </el-upload>
       </div>
-      <li style="margin-top:20px">账号：<input style="margin-left:50px;background-color:rgb(105, 105, 105);border:0px" type="text" v-model="user.username"/></li>
-      <li style="margin-top:10px">用户名：<input style="margin-left:26px;background-color:rgb(105, 105, 105);border:0px" type="text" v-model="user.account"/></li>
+      <li style="margin-top:20px">账号：<input style="margin-left:50px;background-color:rgb(105, 105, 105);border:0px" type="text" v-model="user.account"/></li>
+      <li style="margin-top:10px">用户名：<input style="margin-left:26px;background-color:rgb(105, 105, 105);border:0px" type="text" v-model="user.username"/></li>
       <li style="margin-top:10px">个性签名：<input style="background-color:rgb(105, 105, 105);border:0px" type="text" v-model="user.signed"/></li>
       <li style="margin-top:10px">邮箱：<input style="margin-left:50px;background-color:rgb(105, 105, 105);border:0px" type="text" v-model="user.email"/></li>
       <li style="margin-top:10px">生日：<input style="margin-left:50px;background-color:rgb(105, 105, 105);border:0px" type="text" v-model="user.birthday"/></li>
@@ -34,7 +34,10 @@ import { useWsStore } from '../store/user';
 const $MYGO = inject('$MYGO', '');
 const wsStore=useWsStore()
 // const user=reactive(JSON.parse(localStorage.getItem('user')))
-var user = reactive(JSON.parse(localStorage.getItem('user')))
+var user = reactive({})
+function toImg(url){
+  return $MYGO+"/"+url
+}
 onMounted(()=>{
   wsStore.event=-1
   getuser()
@@ -50,16 +53,14 @@ onMounted(()=>{
   // })
 })
 function getuser(){
-  service.get($MYGO+'/user/getUser')
+  service.get($MYGO+'/user/info')
   .then(res=>{
-    localStorage.setItem('user',JSON.stringify(res.data))
-    user.username=res.data.username
-    user.account=res.data.account
-    user.userId=res.data.userId
-    user.email=res.data.email
-    user.img=res.data.img
-    user.signed=res.data.signed
-    user.birthday=res.data.birthday
+    var item=res.data.data.item
+    localStorage.setItem('user',JSON.stringify(item))
+    user.username=item.username
+    user.account=item.account
+    user.email=item.email
+    user.img=item.img
   }).catch(err=>{
     console.error(err)
   })
@@ -68,9 +69,7 @@ function save()
 {
   console.log(user)
   service.post($MYGO+'/user/update',{
-    'account':user.account,
-    'signed':user.signed,
-    'birthday':user.birthday
+    'username':user.username
   })
   .then(res=>{
     localStorage.setItem('user',JSON.stringify(user))
@@ -104,7 +103,7 @@ function httpRequest(option){
         }
     }).then(response => {
         console.log(response.data)
-        user.img=response.data.img
+        user.img=response.data.data.url
     }).catch(err=>{
       console.log(err)
     })

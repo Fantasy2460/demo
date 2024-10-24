@@ -2,7 +2,7 @@
   <div style="">
     <div style="color:rgb(207, 234, 244);margin-left:150px;margin-top:80px;font-size:25px">
       <div style="display:flex;">
-        <img :src="res.pht" style="height:100px;width:100px;border-radius:50%"  />
+        <img :src="toImg(res.img)" style="height:100px;width:100px;border-radius:50%"  />
       </div>
       <div style="margin-top:20px;display:flex">用户名：<div style="color:rgb(207, 234, 244);margin-left:24px;background-color:rgb(105, 105, 105);">{{res.username}}</div></div>
       <div style="margin-top:10px;display:flex">账号：<div style="color:rgb(207, 234, 244);margin-left:50px;background-color:rgb(105, 105, 105);border:0px">{{res.account}}</div></div>
@@ -32,6 +32,9 @@ const userStore=useUserStore()
 const router = useRouter()  
 const msg = ref('12345678');
 const popoverRef = ref()
+function toImg(url){
+  return $MYGO+"/"+url
+}
 const open = () => {
   ElMessageBox.prompt('请输入验证信息', '验证', {
     confirmButtonText: 'OK',
@@ -41,13 +44,10 @@ const open = () => {
     inputErrorMessage: 'Invalid Email',
   })
     .then(({ value }) => {
-      
-      service.post($MYGO+'/userApplication',{
-        'userOwner':JSON.parse(localStorage.getItem('user')).id-0,
-        'class':0,
-        'target':res.userId-0,
-        'text':value,
-        'stats':0
+      service.post($MYGO+'/userApplication/add',{
+        'userId':res.id-0,
+        'source':1,
+        'content':value
       }).then(res=>{
         ElMessage({
           type: 'success',
@@ -70,20 +70,19 @@ const open = () => {
 }
 
 var user = reactive({})
-    var a = ref(localStorage.getItem("account"))
+var a = ref(localStorage.getItem("account"))
 var res = reactive({})
 onMounted(()=>{
   console.log(a.value);
-  service.post($MYGO+'/user/fidUser',{"username":a.value})
+  service.get($MYGO+'/user/fidUser/'+a.value)
   .then(tmp=>{
-    res.username=tmp.data.username
-    res.account=tmp.data.account
-    res.signed=tmp.data.signed
-    res.email=tmp.data.email
-    res.pht=tmp.data.img
-    res.birthday=tmp.data.birthday
-    res.city=tmp.data.city
-    res.userId=tmp.data.userId
+    var item=tmp.data.data.item
+    res.username=item.username
+    res.account=item.account
+    res.signed=item.signed
+    res.email=item.email
+    res.id=item.id
+    res.img=item.img
   })
   .catch(err=>{
     alert("未找到该用户")
@@ -92,7 +91,6 @@ onMounted(()=>{
 })
 
 function toSpace(){
-  localStorage.setItem("toId",res.userId)
   router.push("/toSpace")
 }
 </script>

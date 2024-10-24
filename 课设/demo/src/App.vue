@@ -12,11 +12,6 @@ const $MYGO = inject('$MYGO', '');
 const router = useRouter()  
 // 在 <script setup> 中，组件默认是局部注册的，所以不需要在 components 对象中声明  
 onMounted(()=>{
-  service.get($MYGO+'/user/createYz')
-  .then(res=>{
-    console.log("--------")
-    localStorage.setItem('yz',res.data.yz)
-  })
 })
 // 提供 color 属性  
 provide('color', 'red');

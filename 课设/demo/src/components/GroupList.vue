@@ -9,7 +9,7 @@
             <div class="unread-indicator">  
               <div class="unread-count" v-if="item.count"> {{ item.count }}</div>  
             </div>
-            <img :src="item.img" style="margin-right:20px; margin-left:10px;width:50px;height:50px;border-radius:50% ;border:rgb(104, 103, 103)" @click="goindex(index)"/>
+            <img :src="toImg(item.groupAvatar)" style="margin-right:20px; margin-left:10px;width:50px;height:50px;border-radius:50% ;border:rgb(104, 103, 103)" @click="goindex(index)"/>
             {{ item?item.groupName:'' }}
           </p>
         </el-scrollbar>
@@ -17,9 +17,9 @@
       <div style="border:1px;height:600px;width:1px;float:left"></div>
       <div>
         <div class="Message" >
-          <div>
-            <div v-if="index!=-1" style="margin-left:20px;line-height:20px">{{ groups[index].groupName?groups[index].groupName:'' }}</div>
-            <button v-if="index!=-1" style="float:right;margin-right:20px;margin-top:-10px;background-color:rgb(105, 105, 105);border:0px;" @click="drawer1=true">···</button>
+          <div v-if="index!=-1">
+            <div style="margin-left:20px;line-height:20px">{{ groups[index].groupName?groups[index].groupName:'' }}</div>
+            <button style="float:right;margin-right:20px;margin-top:-10px;background-color:rgb(105, 105, 105);border:0px;" @click="drawer1=true">···</button>
           </div>
           <hr>
           <div class="Top" style="width:auto" v-if="index!=-1">
@@ -27,9 +27,9 @@
               <div ref="innerRef">
                 <p v-for="(message,i) in groups[index].groupMessages" 
                 :key="i" 
-                 :class="getMessageClass(message.messageOwner==message.messageSender,message.isDeleted)">
-                 <div v-if="message.isDeleted" style="display: flex;">
-                  {{ message.messageOwner==message.messageSender?'您已撤回一条消息':message.senderUser.text+'已撤回一条消息' }}
+                 :class="getMessageClass(message.receiverUserId==message.senderUserId,message.isWithdrawn)">
+                 <div v-if="message.isWithdrawn" style="display: flex;">
+                  {{ message.receiverUserId==message.senderUserId?'您已撤回一条消息':groups[index].usermp[message.senderUserId].remark+'已撤回一条消息' }}
                   <div v-if="message.standby" class="mb-4">
                     <el-button
                       type="danger"
@@ -40,10 +40,10 @@
                     </el-button>
                   </div>
                   <div @click="messagedelete(index,message.id,i)">
-                    <img :src="$MYGO + '/static/images/close.png'"/>
+                    <img :src="toImg($MYGO + '/static/images/close.png')"/>
                   </div>
                  </div>
-                 <div v-else-if="message.messageOwner==message.messageSender" style="display: flex;">
+                 <div v-else-if="message.receiverUserId==message.senderUserId" style="display: flex;">
                       <div style="width:300px;height:1px"></div>
                     <div class="bubble">
                       <div class="message">
@@ -66,14 +66,14 @@
                       </div>
                     </div>
                     <div class="avatar">
-                      {{ message.senderUser.text }}
-                      <img :src="message.senderUser.user.img" class="avatar-image" style="margin-right:20px" @click="checknwgroupuser(message.senderUser)"/>
+                      {{ groups[index].usermp[message.senderUserId].remark }}
+                      <img :src="toImg(groups[index].usermp[message.senderUserId].user.img)" class="avatar-image" style="margin-right:20px" @click="checknwgroupuser(groups[index].usermp[message.senderUserId])"/>
                     </div>
                   </div>
                   <div v-else  style="display: flex;">
                     <div class="avatar">
-                      <img :src="message.senderUser.user.img" class="avatar-image" style="margin-left:20px" @click="checknwgroupuser(message.senderUser)"/>
-                      {{ message.senderUser.text }}
+                      <img :src="toImg(groups[index].usermp[message.senderUserId].user.img)" class="avatar-image" style="margin-left:20px" @click="checknwgroupuser(groups[index].usermp[message.senderUserId])"/>
+                      {{ groups[index].usermp[message.senderUserId].remark  }}
                     </div>
                     <div class="bubble">
                       <div class="message">
@@ -118,7 +118,7 @@
             :http-request="httpRequest"
             :before-upload="beforeImageUpload"
           >
-            <img v-if="groups[index].img" :src="groups[index].img" style="height:100px;width:100px;border-radius:50%"   />
+            <img v-if="groups[index].groupAvatar" :src="toImg(groups[index].groupAvatar)" style="height:100px;width:100px;border-radius:50%"   />
             <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
           </el-upload>
           <div style="font-size: 20px;margin-right: 50px;">{{ groups[index].groupName }} </div> 
@@ -127,11 +127,11 @@
       <template #default>
         <div>群号：{{ groups[index].groupId }}</div>
         <div>群名：{{ groups[index].groupName }}</div>
-        <div>群公告：{{ groups[index].groupInform }}</div>
+        <div>群公告：{{ groups[index].groupAnnouncement }}</div>
         <!-- <div>我的群备注：{{ usertoUsers[index].remarks }}</div> -->
         <div style="display: flex;">
-          <div v-for="(item,i) in groups[index].groupUsers" :key="i" >
-            <img :src="item.user.img" @click="checknwgroupuser(item)" style="width: 50px;"/>{{ item.text }}
+          <div v-for="(item,i) in groups[index].users" :key="i" >
+            <img :src="toImg(item.user.img)" @click="checknwgroupuser(item)" style="width: 50px;"/>{{ item.remark }}
           </div>
         </div>
         <div>其他：</div>
@@ -144,14 +144,14 @@
         </div>
       </template>
     </el-drawer>
-    <el-drawer v-model="drawer2" direction="ltr" v-if="nwgroupuser.userId==user.userId">
+    <el-drawer v-model="drawer2" direction="ltr" v-if="nwgroupuser.userId==user.id">
       <template #header>
-        <h4><img :src="nwgroupuser.user.img" style="width: 50px;border-radius:25px"/> {{ nwgroupuser.text }} </h4>
-      </template>
+        <h4><img :src="toImg(nwgroupuser.user.img)" style="width: 50px;border-radius:25px"/> {{ nwgroupuser.text }} </h4>
+      </template> 
       <template #default>
         <div>账号：{{ nwgroupuser.user.username }}</div>
         <div>账号名：{{ nwgroupuser.user.account }}</div>
-        <div>群备注：可更改</div>
+        <div>群备注：<input v-model="nwgroupuser.remark"/></div>
         <div>权限：
           <span v-if="nwgroupuser.isAdmin==0">群用户</span>
           <span v-if="nwgroupuser.isAdmin==1">群管理</span>
@@ -167,18 +167,18 @@
         </div>
       </template>
     </el-drawer>
-    <el-drawer v-model="drawer2" direction="ltr" v-if="nwgroupuser.userId!=user.userId">
+    <el-drawer v-model="drawer2" direction="ltr" v-if="nwgroupuser.userId!=user.id">
       <template #header>
-        <h4><img :src="nwgroupuser.user.img" style="width: 50px;border-radius:25px"/> {{ nwgroupuser.text }} </h4>
+        <h4><img :src="toImg(nwgroupuser.user.img)" style="width: 50px;border-radius:25px"/> {{ nwgroupuser.remark }} </h4>
       </template>
       <template #default>
         <div>账号：{{ nwgroupuser.user.username }}</div>
         <div>账号名：{{ nwgroupuser.user.account }}</div>
         <div>群备注：不更改</div>
         <div>权限：
-          <span v-if="nwgroupuser.isAdmin==0">群用户</span>
-          <span v-if="nwgroupuser.isAdmin==1">群管理</span>
-          <span v-if="nwgroupuser.isAdmin==2">群主</span>
+          <span v-if="nwgroupuser.permissionLevel==0">群用户</span>
+          <span v-if="nwgroupuser.permissionLevel==1">群管理</span>
+          <span v-if="nwgroupuser.permissionLevel==2">群主</span>
         </div>
         <div>其他：</div>
          <el-button @click="toSpace(nwgroupuser.userId)" type="primary" style="background-color:rgb(207, 230, 244);margin-top:20px;margin-left:10px" text >访问空间</el-button>
@@ -206,10 +206,33 @@ import { da } from "element-plus/es/locale";
 const $MYGO = inject('$MYGO', '');
 const wsStore=useWsStore()
  const router = useRouter()
-var user = reactive(JSON.parse(localStorage.getItem('user')))
+var user = reactive(JSON.parse(localStorage.getItem('user'))) 
 const $Ws: ((data) => string) | undefined = inject('$Ws')
-
+function toImg(url){
+  if(url==null){
+    return null
+  }
+  return $MYGO+"/"+url
+}
 let message=ref('')
+function confirmClick(){
+  if(nwgroupuser.userId==user.id){
+    service.post($MYGO+'/group/updateGroupUser',{
+    'id': groups[index.value].id,
+    'userId': user.id,
+    'message':message.value,
+    'remark':nwgroupuser.remark
+  }).then(res=>{
+    groups[index.value].usermp[user.id].remark=nwgroupuser.remark
+  }).catch(err=>{
+    ElNotification({
+        title: 'Error',
+        message: err.response.data,
+        type: 'error',
+      })
+  })
+  }
+}
 function handleInput() {  
     // 检查inputValue是否包含换行符  
     if (message.value.includes('\n')) {  
@@ -235,12 +258,12 @@ function toSpace(e)
 let drawer1=ref(false)
 let drawer2=ref(false)
 function checknwgroupuser(item){
+  console.log(item)
   nwgroupuser.user=item.user
   nwgroupuser.groupId=item.groupId
   nwgroupuser.id=item.id
-  nwgroupuser.isAdmin=item.isAdmin
-  nwgroupuser.isGag=item.isGag
-  nwgroupuser.text=item.text
+  nwgroupuser.permissionLevel=item.permissionLevel
+  nwgroupuser.remark=item.remark
   nwgroupuser.userId=item.userId
 
   drawer2.value=true
@@ -278,12 +301,20 @@ function beforeImageUpload(rawFile){
 }
 
 function send(){
-  $Ws && $Ws({
-            groupId: groups[index.value].id-0,
-            message:message.value,
-            event:'/group/sendMessage',
-            token:localStorage.getItem('token')
-        })
+  service.post($MYGO+'/group/sendMessage',{
+    'id': groups[index.value].id,
+    'message':message.value,
+    'image':''
+  }).then(res=>{
+    
+  }).catch(err=>{
+    console.error(err)
+    ElNotification({
+        title: 'Error',
+        message: err.response.data,
+        type: 'error',
+      })
+  })
   message.value=''
 }
 function messagedelete(i,id,j){
@@ -303,12 +334,18 @@ function messagedelete(i,id,j){
 }
 function revocation(i,id,j){
   groups[i].groupMessages[j].visible=false
-  $Ws && $Ws({
-            id: id-0,
-            event:'/group/revocationMessage',
-            token:localStorage.getItem('token')
-        })
-  
+  service.post($MYGO+'/group/revocationMessage',{
+    'id': id-0,
+  }).then(res=>{
+    
+  }).catch(err=>{
+    console.error(err)
+    ElNotification({
+        title: 'Error',
+        message: err.response.data,
+        type: 'error',
+      })
+  })
 }
 //消息监听
 watch(  
@@ -456,7 +493,7 @@ const getMessageClass = (isSent,isDeleted) => {
 };
 
 
-var groups=reactive([{groupName:''}])
+var groups=reactive([])
 
 const innerRef = ref<HTMLDivElement>()
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
@@ -466,24 +503,50 @@ function readmessage(val){
   .then(res=>{
 
   }).catch(err=>{
-    console.error(err)
+    ElNotification({
+        title: 'Error',
+        message: err.response.data,
+        type: 'error',
+      })
   })
   
 }
 function goindex(val){
-  let nwval=index.value
-  if(nwval!=-1&&groups[nwval].groupMessages&&!groups[nwval].groupMessages[groups[nwval].groupMessages.length-1].isRead){
-    readmessage(groups[nwval].id)
-    groups[nwval].groupMessages[groups[nwval].groupMessages.length-1].isRead=true
-    getcount(nwval)
+  if(!groups[val].reading){
+    groups[val].reading=!groups[val].reading
+    service.get($MYGO+'/group/fidGroupUser/'+groups[val].id+'/1/50')
+    .then(res=>{
+      groups[val].users=res.data.data.items
+      groups[val].usermp={}
+      res.data.data.items.forEach(element => {
+        groups[val].usermp[element.id]=element
+      });
+      service.get($MYGO+'/group/fidMessage/'+groups[val].id+'/1/50')
+      .then(res=>{
+        groups[val].groupMessages=res.data.data.items
+        index.value=val
+        gobottom()
+      }).catch(err=>{
+        ElNotification({
+          title: 'Error',
+          message: err.response.data,
+          type: 'error',
+        })
+      })
+    }).catch(err=>{
+      ElNotification({
+        title: 'Error',
+        message: err.response.data,
+        type: 'error',
+      })
+    })
+    
   }
-  index.value=val
-  if(val!=-1&&groups[val].groupMessages&&!groups[val].groupMessages[groups[val].groupMessages.length-1].isRead){
-    readmessage(groups[val].id)
-    groups[val].groupMessages[groups[val].groupMessages.length-1].isRead=true
-    getcount(val)
+  else {
+    index.value=val
+    gobottom()
   }
-  gobottom()
+  readmessage(groups[val].id)
 }
 function gobottom(){//抵达最底部
   if(index.value==-1){
@@ -495,23 +558,14 @@ function gobottom(){//抵达最底部
 }
 function getgroups(){
   console.log('发送请求')
-   service.get($MYGO+'/group/fidGroups')
+   service.get($MYGO+'/group/fidGroup/1/50')
    .then(res=>{
-    console.log(res.data)
-    groups.pop()
-    let i=0
-    res.data.forEach(element => {
+    console.log(res)
+      res.data.data.items.forEach(element => {
       groups.push(element)
-      getcount(i)
-      i++
     });
-    gobottom()
    }).catch(err=>{
       console.error(err)
-      let data=err.response.data
-      if(data.type=='token'){
-        localStorage.removeItem('token')
-      }
       ElNotification({
         title: 'Error',
         message: err,

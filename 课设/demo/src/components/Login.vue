@@ -63,11 +63,11 @@ const router = useRouter()
 const yz=ref(localStorage.getItem('yz'))
 const yzm=ref('')
 function checkyz(){
-  service.get($MYGO+'/user/createYz')
-  .then(res=>{
-    localStorage.setItem('yz',res.data.yz)
-    yz.value=res.data.yz
-  })
+  // service.get($MYGO+'/user/createYz')
+  // .then(res=>{
+  //   localStorage.setItem('yz',res.data.yz)
+  //   yz.value=res.data.yz
+  // })
 }
 // 响应式状态  
 const username = ref('');  
@@ -78,39 +78,28 @@ const ckname = ref(false);
 function sub() {  
   localStorage.setItem("username", username.value);  
   axios.post($MYGO+'/user/login', {  
-    username: username.value,  
-    password: passwd.value,
-    yz:  yzm.value
+    userName: username.value,  
+    password: passwd.value
   })  
-  .then(response => {  
-    console.log("--------");  
-    console.log(response.data);
-    localStorage.setItem('token',response.data.token)
+  .then(response => {
+    
+    localStorage.setItem('token',response.data.data.token)
     localStorage.setItem("name",username.value);
-    localStorage.setItem("password",passwd.value );
-    localStorage.setItem('id',response.data.userId)
-    localStorage.setItem('user',JSON.stringify(response.data))
-    service.post($MYGO+'/space/spaceadd',{
-      "UserId":response.data.userId,
-    })
-    userStore.token=response.data.token
-    userStore.username=response.data.username
     ElNotification({
       title: 'Success',
       message: '登录成功',
       type: 'success',
     }) 
     router.push('person')
+    
   })  
   .catch(err => {  
     checkyz()
-    console.log("----1111----");  
-    console.error(err.response.data);  
     // 注意：在 <script setup> 中，你可能需要自定义通知函数或使用其他库/插件来显示通知  
     // 这里只是一个示例，你可能需要调整  
     ElNotification({
       title: 'Error',
-      message: '账号或密码错误',
+      message: err.response.data.msg,
       type: 'error',
     })
   });  
@@ -126,7 +115,8 @@ function checkname(event) {
   
 // 组件挂载后执行的操作  
 onMounted(() => {  
-  username.value = localStorage.getItem('username') || '';  
+  username.value = localStorage.getItem('username') || '';
+  checkyz()
 });  
   
 // 如果你需要在模板外的地方访问组件内部变量或方法，可以使用 defineExpose  
